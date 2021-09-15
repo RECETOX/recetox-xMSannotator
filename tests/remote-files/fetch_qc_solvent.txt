@@ -1,0 +1,14 @@
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/NumberOfCorrelationsPerFeature_cor0.7.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage1.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage2.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage2_withisotopes.txt
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage3.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage4.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/Stage5.csv
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/chemCompMZ.Rda
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/chemscoremat.Rds
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/global_cor.Rda
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/step1_results.Rda
+https://gitlab.ics.muni.cz/umsa/umsa-files/-/raw/master/testdata/recetox-xMSannotator/qc_solvent/tempobjects.Rda
+
+
