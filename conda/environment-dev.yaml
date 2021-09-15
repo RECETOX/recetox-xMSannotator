@@ -31,3 +31,4 @@ dependencies:
   - r-languageserver
   - r-foreach
   - r-rlang
+  - r-datacomparer
