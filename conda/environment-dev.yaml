@@ -5,7 +5,7 @@ channels:
   - defaults
   - r
 dependencies:
- #  - r-base >=3.5
+  - r-base >=3.5
   - boost-cpp
   - r-biocmanager
   - r-rsqlite
@@ -31,4 +31,4 @@ dependencies:
   - r-languageserver
   - r-foreach
   - r-rlang
-  - r-datacomparer
+#  - r-datacomparer
