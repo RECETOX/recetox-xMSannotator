@@ -5,7 +5,7 @@ channels:
   - defaults
   - r
 dependencies:
-  - r-base
+ #  - r-base >=3.5
   - boost-cpp
   - r-biocmanager
   - r-rsqlite

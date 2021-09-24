@@ -3,3 +3,5 @@ codecov.yml
 NAMESPACE_old
 conda
 Dockerfile
+^.*\.Rproj$
+^\.Rproj\.user$

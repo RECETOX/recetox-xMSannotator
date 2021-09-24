@@ -2,3 +2,7 @@
 xMSannotator-tests
 tests/testthat/testdata/*
 Rtmp*/
+.Rproj.user
+.Rbuildignore
+.Rhistory
+*.Rproj
