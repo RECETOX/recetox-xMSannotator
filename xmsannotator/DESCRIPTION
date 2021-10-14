@@ -26,13 +26,15 @@ Imports:
     magrittr,
     gplots,
     entropy,
-    rlist
+    rlist,
+    plyr
 Suggests:
     testthat (>= 3.0.0),
     arrow (>= 3.0.0),
     readr,
     rhdf5,
-    patrick
+    patrick,
+    dataCompareR
 Config/testthat/edition: 3
 SystemRequirements: C++11
 LinkingTo: 
