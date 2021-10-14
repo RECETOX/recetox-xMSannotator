@@ -27,7 +27,8 @@ Imports:
     gplots,
     entropy,
     rlist,
-    plyr
+    plyr,
+    Rdisop
 Suggests:
     testthat (>= 3.0.0),
     arrow (>= 3.0.0),

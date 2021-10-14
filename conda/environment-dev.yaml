@@ -31,3 +31,5 @@ dependencies:
   - r-patrick
   - r-plyr
   - r-datacomparer
+  - bioconductor-rdisop
+
