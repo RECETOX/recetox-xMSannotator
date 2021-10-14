@@ -58,7 +58,6 @@ patrick::with_parameters_test_that(
   },
   patrick::cases(
     qc_solvent = list(subfolder = "qc_solvent", db_name = "HMDB", num_sets = 205, max_diff_rt = 0.5),
-    qc_matrix = list(subfolder = "qc_matrix", db_name = "KEGG", num_sets = 2752, max_diff_rt = 0.5),
     batch1_neg = list(subfolder = "batch1_neg", db_name = "HMDB", num_sets = 708, max_diff_rt = 0.5),
     sourceforge = list(subfolder = "sourceforge", db_name = "HMDB", num_sets = 756, max_diff_rt = 2)
   )

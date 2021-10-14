@@ -31,7 +31,7 @@ count_chemicals_occurence <- function(module_data, pathway_chemicals, scorethres
 }
 
 
-compute_score_pathways <- function(chemscoremat, db, pathwaycheckmode, scorethresh, adduct_weights, max_diff_rt, bad_path_IDs, db_name) {
+compute_score_pathways <- function(chemscoremat, db, pathwaycheckmode, scorethresh, adduct_weights, max_diff_rt, bad_path_IDs, db_name = "HMDB") {
   pthresh <- 0.05
 
   pathway_ids <- unique(as.character(db[, 2]))
@@ -76,13 +76,9 @@ compute_score_pathways <- function(chemscoremat, db, pathwaycheckmode, scorethre
           all_notcurpath_numchem
         ))
 
-        if (p_value <= pthresh) {
-          # compatibility with wrong behavior
-          if (db_name == "KEGG") {
-            pathway_chemicals_to_iterate <- curmchemical_in_pathway$chemical_ID
-          } else {
-            pathway_chemicals_to_iterate <- pathway_chemicals
-          }
+        if (p_value <= pthresh) {         
+          pathway_chemicals_to_iterate <- pathway_chemicals
+          
 
           for (chemname in pathway_chemicals_to_iterate) {
             pathway_indices <- which(as.character(curmchemical_in_pathway$chemical_ID) == chemname)
@@ -138,13 +134,7 @@ compute_score_pathways <- function(chemscoremat, db, pathwaycheckmode, scorethre
                       curmchemicaldata$score <- rep(0, length(curmchemicaldata$score))
                     }
                   }
-
-                  # compatibility with wrong behavior
-                  if (db_name == "KEGG") {
-                    chemical_name <- other_module_pathway_number
-                  } else {
-                    chemical_name <- chemname
-                  }
+                  chemical_name <- chemname                  
 
                   if (curmchemicaldata$score[1] < scorethresh) {
                     indices <- which(
@@ -272,38 +262,20 @@ multilevelannotationstep3 <- function(chemCompMZ,
     chemscoremat <- chemscoremat[-bad_indices, ]
   }
 
-  if (db_name == "KEGG") {
-    data(keggotherinf)
-
-    db <- preprocess_db(keggotherinf, 4, "map")
-
+  if (db_name == "HMDB") {
+    data(hmdbAllinf)
+    hmdbAllinfv3.5 <- hmdbAllinf[, -c(26:27)]
+    rm(hmdbAllinf, envir = .GlobalEnv)
+    db <- preprocess_db(hmdbAllinfv3.5, 14, "SM")
     chemscoremat <- merge(chemscoremat,
-      keggotherinf,
+      hmdbAllinfv3.5,
       by.x = "chemical_ID",
-      by.y = "KEGGID"
+      by.y = "HMDBID"
     )
-
-    chemscoremat <- compute_score_pathways(chemscoremat, db, pathwaycheckmode, scorethresh, adduct_weights, max_diff_rt, c("-", "map01100"), db_name)
-  }
-  else {
-    if (db_name == "HMDB") {
-      data(hmdbAllinf)
-
-      hmdbAllinfv3.5 <- hmdbAllinf[, -c(26:27)]
-      rm(hmdbAllinf, envir = .GlobalEnv)
-
-      db <- preprocess_db(hmdbAllinfv3.5, 14, "SM")
-
-      chemscoremat <- merge(chemscoremat,
-        hmdbAllinfv3.5,
-        by.x = "chemical_ID",
-        by.y = "HMDBID"
-      )
-
-      rm(hmdbAllinfv3.5)
-
-      chemscoremat <- compute_score_pathways(chemscoremat, db, pathwaycheckmode, scorethresh, adduct_weights, max_diff_rt, c("-"), db_name)
-    }
+    rm(hmdbAllinfv3.5)
+    chemscoremat <- compute_score_pathways(chemscoremat, db, pathwaycheckmode, scorethresh, adduct_weights, max_diff_rt, c("-"), db_name)
+  } else {
+    stop("Database other than HMDB not supported!")
   }
 
   chemscoremat <- replace_x_names(chemscoremat)
