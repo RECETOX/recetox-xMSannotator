@@ -1,4 +1,4 @@
-name: recetox-xmsannotator-dev
+name: october-xmsannotator-dev
 channels:
   - conda-forge
   - bioconda
@@ -29,3 +29,5 @@ dependencies:
   - r-entropy
   - r-rcdk
   - r-patrick
+  - r-plyr
+  - r-datacomparer

@@ -46,6 +46,21 @@ remove_tmp_files <- function(loc) {
   }
 }
 
+compute_multimatches <- function(mz, curated_res, adduct_weights) {
+  multimatches_idx <- which(curated_res$mz %in% mz)
+  multimatch_features <- increase_multimatches_score(curated_res[multimatches_idx, ], adduct_weights)
+  max_score_idx <- which(multimatch_features$score == max(multimatch_features$score, na.rm = TRUE))
+  multimatches_idx <- multimatches_idx[-max_score_idx]
+
+  for (feature in 1:nrow(multimatch_features)) {
+    if (multimatch_features$score[feature] != max(multimatch_features$score)) {
+      same_molecule_idx <- which(curated_res$chemical_ID %in% multimatch_features$chemical_ID[feature])
+      curated_res$score[same_molecule_idx] <- reevaluate_multimatches_score(curated_res[same_molecule_idx, ])
+    }
+  }
+  return(multimatches_idx)
+}
+
 multilevelannotationstep5 <- function(outloc,
                                       adduct_weights = NA,
                                       chemscoremat = NA) {
@@ -68,22 +83,13 @@ multilevelannotationstep5 <- function(outloc,
 
   duplicated_features <- get_features(curated_res$mz, "multiple")
 
-  lower_score_multimatches_idx <- {}
-  lower_score_multimatches_idx <- foreach(mz = duplicated_features, .combine = rbind) %dopar% {
-    multimatches_idx <- which(curated_res$mz %in% mz)
-    multimatch_features <- increase_multimatches_score(curated_res[multimatches_idx, ], adduct_weights)
-    max_score_idx <- which(multimatch_features$score == max(multimatch_features$score, na.rm = TRUE))
-    multimatches_idx <- multimatches_idx[-max_score_idx]
-
-    for (feature in 1:nrow(multimatch_features)) {
-      if (multimatch_features$score[feature] != max(multimatch_features$score)) {
-        same_molecule_idx <- which(curated_res$chemical_ID %in% multimatch_features$chemical_ID[feature])
-        curated_res$score[same_molecule_idx] <- reevaluate_multimatches_score(curated_res[same_molecule_idx, ])
-      }
-    }
-    return(multimatches_idx)
-  }
-
+  lower_score_multimatches_idx <- unlist(lapply(
+    duplicated_features,
+    compute_multimatches,
+    curated_res,
+    adduct_weights
+  ))
+  
   if (length(lower_score_multimatches_idx) > 0) {
     curated_res <- curated_res[-c(lower_score_multimatches_idx), ]
   }
