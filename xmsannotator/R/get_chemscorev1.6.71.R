@@ -389,10 +389,10 @@ compute_temp_score_and_data <- function(group_sizes,
 }
 
 compute_time_cor_groups <- function(mchemicaldata,
-                                max_diff_rt,
-                                min_val,
-                                max_val,
-                                iqr1) {
+                                    max_diff_rt,
+                                    min_val,
+                                    max_val,
+                                    iqr1) {
   diff_rt <- compute_diff_rt(mchemicaldata$time)
   breaks <- {}
 
@@ -784,7 +784,7 @@ compute_best_score <- function(table_mod,
       # next;
     }
 
-    mzid_cur <- paste(mchemicaldata$mz, mchemicaldata$time, sep = "_")
+    mzid_cur <- paste0(round(mchemicaldata$mz, 5), "_", round(mchemicaldata$time, 1))
     cor_mz <- compute_cor_mz(mzid_cur, global_cor)
 
     if (length(cor_mz) > 1) {

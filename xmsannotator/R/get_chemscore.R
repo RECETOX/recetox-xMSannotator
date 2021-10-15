@@ -3,35 +3,39 @@
 #' @import plyr
 #' @importFrom magrittr %>%
 #' @export
-get_chemscore <- function(chemical_id,
+get_chemscore <- function(...,
                           annotation,
-                          correlation_threshold,
                           peak_correlation_matrix,
-                          time_tolerance = 10,
                           adduct_weights,
+                          correlation_threshold,
+                          time_tolerance = 10,
                           filter_by = c("M+H"),
                           MplusH_abundance_ratio_check = TRUE,
                           outlocorig) {
   setwd(outlocorig)
 
+  query <- tibble(...)
   outloc1 <- paste(outlocorig, "/stage2/", sep = "")
   suppressWarnings(dir.create(outloc1))
   setwd(outloc1)
 
   if (length(annotation$mz) < 1) stop("No mz data found!")
 
+  mchemicaldata <- annotation %>% filter(.$chemical_ID == query$chemical_ID)
+
   result <- compute_chemical_score(
-    annotation,
+    mchemicaldata,
     adduct_weights,
-    global_cor,
-    corthresh,
+    peak_correlation_matrix,
+    correlation_threshold,
     filter_by,
     time_tolerance,
-    chemical_id,
+    query$chemical_ID,
     MplusH_abundance_ratio_check
   )
 
   setwd("..")
 
-  return(result$chemical_score)
+  query$cur_chem_score <- result$chemical_score
+  return(query)
 }
