@@ -674,7 +674,10 @@ get_data_and_score_for_chemical <- function(cor_mz,
 }
 
 compute_cor_mz <- function(mzid_cur, global_cor) {
-  cor_mz <- round(global_cor[mzid_cur, mzid_cur], 1)
+  cor_mz <- try(round(global_cor[mzid_cur, mzid_cur], 1))
+  if(class(cor_mz) == "try-error") {
+    browser()
+  }
 
   if (length(cor_mz) > 1) {
     corrownamesA <- rownames(cor_mz)
