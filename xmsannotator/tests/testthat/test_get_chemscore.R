@@ -97,7 +97,7 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
   patrick::cases(
     qc_solvent = list(test_identifier = "qc_solvent"),
     batch1_neg = list(test_identifier = "batch1_neg"),
-    #sourceforge = list(test_identifier = "sourceforge"),
+    sourceforge = list(test_identifier = "sourceforge"),
     qc_matrix = list(test_identifier = "qc_matrix")
   )
 )

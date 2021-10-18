@@ -21,7 +21,10 @@ get_chemscore <- function(...,
 
   if (length(annotation$mz) < 1) stop("No mz data found!")
 
-  mchemicaldata <- annotation %>% filter(.$chemical_ID == query$chemical_ID)
+  mchemicaldata <- annotation %>% filter(
+    .$chemical_ID == query$chemical_ID
+    & near(.$time, query$time)
+  )
 
   result <- compute_chemical_score(
     mchemicaldata,
