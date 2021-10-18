@@ -23,8 +23,15 @@ get_chemscore <- function(...,
 
   mchemicaldata <- annotation %>% filter(
     .$chemical_ID == query$chemical_ID
-    & near(.$time, query$time)
   )
+
+  if(nrow(mchemicaldata %>% filter(is.na(MonoisotopicMass))) > 0) {
+    mchemicaldata$MonoisotopicMass[is.na(mchemicaldata$MonoisotopicMass)] <- "-"
+    mchemicaldata$theoretical.mz[is.na(mchemicaldata$theoretical.mz)] <- "-"
+
+    mchemicaldata$MonoisotopicMass <- as.character(mchemicaldata$MonoisotopicMass)
+    mchemicaldata$theoretical.mz <- as.character(mchemicaldata$theoretical.mz)
+  }
 
   result <- compute_chemical_score(
     mchemicaldata,

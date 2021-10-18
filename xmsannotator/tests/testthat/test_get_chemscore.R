@@ -14,62 +14,40 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
     }
 
     annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
-    annotation <- readRDS(annotation_file)
-    # annotation$peak <- as.integer(rownames(annotation))
+    isotopes <- readRDS(annotation_file)
 
-
-    peaks_filename <- file.path("test-data/get_chemscore", paste0(test_identifier,".rds"))
+    isotopes$MonoisotopicMass <- as.numeric(isotopes$MonoisotopicMass)
+    isotopes$theoretical.mz <- as.numeric(isotopes$theoretical.mz)
 
     data(adduct_weights)
-    peaks <- readRDS(peaks_filename)
-    peaks$peak <- rownames(peaks)
-    peaks <- dplyr::rename(peaks, rt = time)
-    peaks <- dplyr::rename_with(
-        peaks,
-        ~ paste0("intensity_", .x),
-        starts_with(c("Tribrid", "Thermo", "rep"))
-    )
-    peaks$peak <- as.integer(peaks$peak)
+    load(file = file.path(test_path, "global_cor.Rda"))
 
-    intensity_matrix <- t(select(peaks, starts_with("intensity")))
-    intensity_matrix <- magrittr::set_colnames(intensity_matrix, paste0(round(peaks$mz, 5), "_", round(peaks$rt, 1)))
-    correlation_matrix <- WGCNA::cor(intensity_matrix, use = "p", method = "p")
-
-    chemical_groups <- group_split(annotation, chemical_ID)
-    chemical_groups_v2 <- group_by(annotation, chemical_ID)
-
-    # actual <- annotation %>% group_by(chemical_ID) %>%
-    #     mutate(
-    #     cur_chem_score = get_chemscore(
-    #         chemical_ID,
-    #         annotation = annotation,
-    #         adduct_weights = adduct_weights,
-    #         correlation_threshold = 0.7,
-    #         peak_correlation_matrix = correlation_matrix,
-    #         time_tolerance = 10,
-    #         outlocorig = outloc
-    #     )
-    # )
-    chemical_IDs <- as.list(annotation$chemical_ID)
+    annotation <- isotopes %>% filter(!is.na(MonoisotopicMass))
+    expected <- expected %>% filter(MonoisotopicMass != "-")
 
     actual <- purrr::pmap_dfr(
         annotation,
         ~ get_chemscore(...,
-            annotation = annotation,
+            annotation = isotopes,
             adduct_weights = adduct_weights,
             correlation_threshold = 0.7,
-            peak_correlation_matrix = correlation_matrix,
-            time_tolerance = 10,
+            peak_correlation_matrix = global_cor,
+            time_tolerance = max_diff_rt,
             outlocorig = outloc
-        )
+      )
     )
 
-    write.csv(actual, file = file.path(outloc, "chemscoremat.csv"))
 
     actual$Formula <- gsub(actual$Formula, pattern = "_.*", replacement = "")
-    keys <- c("mz", "time", "Name", "Adduct", "Formula", "chemical_ID", "cur_chem_score")
+    keys <- colnames(actual)
+
+    actual$MonoisotopicMass[is.na(actual$MonoisotopicMass)] <- "-"
+    actual$theoretical.mz[is.na(actual$theoretical.mz)] <- "-"
 
     actual$MonoisotopicMass <- as.character(actual$MonoisotopicMass)
+    actual$theoretical.mz <- as.character(actual$theoretical.mz)
+    expected$Module_RTclust <- as.character(expected$Module_RTclust)
+    
     actual <- dplyr::arrange_at(
       actual, keys
     )
@@ -83,8 +61,11 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
       reportName = test_identifier,
       reportLocation = outloc,
       showInViewer = FALSE,
-      mismatchCount = 1000
+      mismatchCount = 10000
     )
+
+    write.csv(actual, file = file.path(outloc, "chemscoremat_actual.csv"))
+    write.csv(expected, file = file.path(outloc, "chemscoremat_expected.csv"))
 
     setwd(testthat_wd)
 
@@ -95,9 +76,9 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
     gc(reset = TRUE)
 },
   patrick::cases(
-    qc_solvent = list(test_identifier = "qc_solvent"),
-    batch1_neg = list(test_identifier = "batch1_neg"),
-    sourceforge = list(test_identifier = "sourceforge"),
-    qc_matrix = list(test_identifier = "qc_matrix")
+    #qc_solvent = list(test_identifier = "qc_solvent", max_diff_rt = 0.5)
+    # batch1_neg = list(test_identifier = "batch1_neg", max_diff_rt = 0.5)
+    # sourceforge = list(test_identifier = "sourceforge", max_diff_rt = 2)
+    qc_matrix = list(test_identifier = "qc_matrix", max_diff_rt = 0.5)
   )
 )
