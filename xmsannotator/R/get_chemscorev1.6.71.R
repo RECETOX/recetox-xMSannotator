@@ -190,7 +190,7 @@ add_isotopic_peaks <- function(mchemicaldata,
 
   mchemicaldata <- unique(mchemicaldata)
 
-  curformula <- as.character(mchemicaldata[, 7])
+  curformula <- as.character(mchemicaldata$Formula)
 
   formula_check <- Rdisop::getMolecule(as.character(curformula[1]))
   exp_isp <- which(formula_check$isotopes[[1]][2, ] >= 0.001)
@@ -926,7 +926,8 @@ get_chemscorev1.6.71 <- function(chemicalid,
                                  MplusH.abundance.ratio.check = TRUE,
                                  mass_defect_window = 0.01,
                                  mass_defect_mode = "pos",
-                                 outlocorig) {
+                                 outlocorig,
+                                 isotopes) {
   setwd(outlocorig)
 
   outloc1 <- paste(outlocorig, "/stage2/", sep = "")
@@ -946,6 +947,28 @@ get_chemscorev1.6.71 <- function(chemicalid,
     max_isp,
     abund_ratio_vec
   )
+
+  B <- mchemicaldata
+  A <- isotopes %>% filter(chemical_ID == chemicalid)
+  
+  # Fix in case isotopes are detected
+  if(nrow(A %>% filter(is.na(MonoisotopicMass))) > 0) {
+    A$MonoisotopicMass[is.na(A$MonoisotopicMass)] <- "-"
+    A$theoretical.mz[is.na(A$theoretical.mz)] <- "-"
+
+    A$MonoisotopicMass <- as.character(A$MonoisotopicMass)
+    A$theoretical.mz <- as.character(A$theoretical.mz)
+  }
+  
+  
+  comparison <- dataCompareR::rCompare(A, B)
+  s <- summary(comparison)
+  if(s$ncolsSomeUnequal > 0) {
+    print(A)
+    print(B)
+    print(comparison)
+    browser()
+  }
 
   result <- compute_chemical_score(
     mchemicaldata,

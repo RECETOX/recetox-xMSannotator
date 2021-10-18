@@ -21,6 +21,11 @@ patrick::with_parameters_test_that(
     )
     dir.create(outloc, recursive = TRUE)
 
+    annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
+    isotopes <- readRDS(annotation_file)
+    isotopes$MonoisotopicMass <- as.numeric(isotopes$MonoisotopicMass)
+    isotopes$theoretical.mz <- as.numeric(isotopes$theoretical.mz)
+
     # Act
     actual <- lapply(
       1:num_sets,
@@ -41,15 +46,18 @@ patrick::with_parameters_test_that(
       mass_defect_mode = mass_defect_mode,
       chemids = chemids,
       isop_res_md = isop_res_md,
-      filter.by = filter.by
+      filter.by = filter.by,
+      isotopes
     )
     actual <- plyr::ldply(actual, rbind)
     actual$Formula <- gsub(actual$Formula, pattern = "_.*", replacement = "")
 
 
-    keys <- c("mz", "time", "Name", "Adduct", "Formula", "chemical_ID", "cur_chem_score")
+    keys <- colnames(actual)
 
-    actual$MonoisotopicMass <- as.character(actual$MonoisotopicMass)
+    actual$MonoisotopicMass <- as.character(actual$MonoisotopicMass)    
+    expected$Module_RTclust <- as.character(expected$Module_RTclust)
+
     actual <- dplyr::arrange_at(
       actual, keys
     )
@@ -63,8 +71,11 @@ patrick::with_parameters_test_that(
       reportName = test_identifier,
       reportLocation = outloc,
       showInViewer = FALSE,
-      mismatchCount = 1000
+      mismatchCount = 100000
     )
+
+    mismatch <- dataCompareR::generateMismatchData(comparison, actual, expected)
+
 
     # Annihilate
     setwd(outloc)
@@ -78,9 +89,9 @@ patrick::with_parameters_test_that(
     gc(reset = TRUE)
   },
   patrick::cases(
-    qc_solvent = list(test_identifier = "qc_solvent"),
-    batch1_neg = list(test_identifier = "batch1_neg"),
-    sourceforge = list(test_identifier = "sourceforge"),
+    # qc_solvent = list(test_identifier = "qc_solvent")
+    #batch1_neg = list(test_identifier = "batch1_neg")
+    #sourceforge = list(test_identifier = "sourceforge")
     qc_matrix = list(test_identifier = "qc_matrix")
   )
 )
