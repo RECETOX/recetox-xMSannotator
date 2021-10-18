@@ -35,7 +35,8 @@ compute_chemscore <- function(j,
                               max_isp,
                               MplusH.abundance.ratio.check,
                               mass_defect_mode,
-                              outloc) {
+                              outloc,
+                              isotopes) {
   chemid <- chemids[j]
   chemscoremat <- {}
   curmchemdata <- mchemdata[which(mchemdata$chemical_ID == chemid), ]
@@ -80,7 +81,8 @@ compute_chemscore <- function(j,
     MplusH.abundance.ratio.check = MplusH.abundance.ratio.check,
     mass_defect_window = mass_defect_window,
     mass_defect_mode = mass_defect_mode,
-    outlocorig = outloc
+    outlocorig = outloc,
+    isotopes
   )
 
   if (length(chem_score) > 0) {
@@ -121,7 +123,8 @@ multilevelannotationstep2 <- function(outloc1,
                                       mass_defect_mode,
                                       chemids,
                                       isop_res_md,
-                                      filter.by) {
+                                      filter.by,
+                                      isotopes) {
   setwd(outloc1)
 
   # load("step1_results.Rda")
@@ -177,7 +180,8 @@ multilevelannotationstep2 <- function(outloc1,
     max_isp = max_isp,
     MplusH.abundance.ratio.check = MplusH.abundance.ratio.check,
     mass_defect_mode = mass_defect_mode,
-    outloc = outloc
+    outloc = outloc,
+    isotopes
   )
 
   chem_score2 <- chem_score[which(chem_score != "NULL")]
@@ -206,7 +210,8 @@ call_multilevelannotationstep2 <- function(arg1,
                                            mass_defect_mode,
                                            chemids,
                                            isop_res_md,
-                                           filter.by) {
+                                           filter.by,
+                                           isotopes) {
   cur_fname <- paste(outloc, "/stage2/chem_score", arg1, ".Rda", sep = "")
   check_if_exists <- file.exists(cur_fname)
 
@@ -230,7 +235,8 @@ call_multilevelannotationstep2 <- function(arg1,
       mass_defect_mode = mass_defect_mode,
       chemids = chemids,
       isop_res_md = isop_res_md,
-      filter.by = filter.by
+      filter.by = filter.by,
+      isotopes
     )
   } else {
     print(paste("List ", arg1, " already exists.", sep = ""))
