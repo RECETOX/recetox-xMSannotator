@@ -14,12 +14,7 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
     }
 
     annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
-    isotopes <- readRDS(annotation_file)
-
-    isotopes$mz <- as.numeric(isotopes$mz)
-    isotopes$time <- as.numeric(isotopes$time)
-    isotopes$mean_int_vec <- as.numeric(isotopes$mean_int_vec)
-    
+    isotopes <- readRDS(annotation_file)  
 
     if(is.factor(isotopes$MonoisotopicMass)) {
       isotopes$MonoisotopicMass <- as.numeric(levels(isotopes$MonoisotopicMass))[isotopes$MonoisotopicMass]
