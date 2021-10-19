@@ -948,27 +948,30 @@ get_chemscorev1.6.71 <- function(chemicalid,
     abund_ratio_vec
   )
 
-  B <- mchemicaldata
-  A <- isotopes %>% filter(chemical_ID == chemicalid)
+  # B <- mchemicaldata
+  # A <- isotopes %>% filter(chemical_ID == chemicalid)
   
-  # Fix in case isotopes are detected
-  if(nrow(A %>% filter(is.na(MonoisotopicMass))) > 0) {
-    A$MonoisotopicMass[is.na(A$MonoisotopicMass)] <- "-"
-    A$theoretical.mz[is.na(A$theoretical.mz)] <- "-"
+  # # Fix in case isotopes are detected
+  # if(nrow(A %>% filter(is.na(MonoisotopicMass))) > 0) {
+  #   A$MonoisotopicMass[is.na(A$MonoisotopicMass)] <- "-"
+  #   A$theoretical.mz[is.na(A$theoretical.mz)] <- "-"
 
-    A$MonoisotopicMass <- as.character(A$MonoisotopicMass)
-    A$theoretical.mz <- as.character(A$theoretical.mz)
-  }
+  #   A$MonoisotopicMass <- as.character(A$MonoisotopicMass)
+  #   A$theoretical.mz <- as.character(A$theoretical.mz)
+  # }
+  # # else if (nrow(A) == 1) {
+  # #   A$theoretical.mz <- as.numeric(A$theoretical.mz)
+  # #   A$MonoisotopicMass <- as.character(A$MonoisotopicMass)
+  # # }
   
-  
-  comparison <- dataCompareR::rCompare(A, B)
-  s <- summary(comparison)
-  if(s$ncolsSomeUnequal > 0) {
-    print(A)
-    print(B)
-    print(comparison)
-    browser()
-  }
+  # comparison <- dataCompareR::rCompare(A, B)
+  # s <- summary(comparison)
+  # if(s$ncolsSomeUnequal > 0) {
+  #   print(A)
+  #   print(B)
+  #   print(comparison)
+  #   browser()
+  # }
 
   result <- compute_chemical_score(
     mchemicaldata,

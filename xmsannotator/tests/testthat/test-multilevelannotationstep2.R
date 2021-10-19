@@ -23,6 +23,11 @@ patrick::with_parameters_test_that(
 
     annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
     isotopes <- readRDS(annotation_file)
+
+    if(is.factor(isotopes$MonoisotopicMass)) {
+      isotopes$MonoisotopicMass <- as.numeric(levels(isotopes$MonoisotopicMass))[isotopes$MonoisotopicMass]
+    }
+
     isotopes$MonoisotopicMass <- as.numeric(isotopes$MonoisotopicMass)
     isotopes$theoretical.mz <- as.numeric(isotopes$theoretical.mz)
 
@@ -89,9 +94,9 @@ patrick::with_parameters_test_that(
     gc(reset = TRUE)
   },
   patrick::cases(
-    # qc_solvent = list(test_identifier = "qc_solvent")
-    #batch1_neg = list(test_identifier = "batch1_neg")
-    #sourceforge = list(test_identifier = "sourceforge")
+    qc_solvent = list(test_identifier = "qc_solvent"),
+    batch1_neg = list(test_identifier = "batch1_neg"),
+    sourceforge = list(test_identifier = "sourceforge"),
     qc_matrix = list(test_identifier = "qc_matrix")
   )
 )

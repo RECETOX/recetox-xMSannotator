@@ -16,14 +16,23 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
     annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
     isotopes <- readRDS(annotation_file)
 
+    isotopes$mz <- as.numeric(isotopes$mz)
+    isotopes$time <- as.numeric(isotopes$time)
+    isotopes$mean_int_vec <- as.numeric(isotopes$mean_int_vec)
+    
+
+    if(is.factor(isotopes$MonoisotopicMass)) {
+      isotopes$MonoisotopicMass <- as.numeric(levels(isotopes$MonoisotopicMass))[isotopes$MonoisotopicMass]
+    }
+
     isotopes$MonoisotopicMass <- as.numeric(isotopes$MonoisotopicMass)
     isotopes$theoretical.mz <- as.numeric(isotopes$theoretical.mz)
+
 
     data(adduct_weights)
     load(file = file.path(test_path, "global_cor.Rda"))
 
-    annotation <- isotopes %>% filter(!is.na(MonoisotopicMass))
-    expected <- expected %>% filter(MonoisotopicMass != "-")
+    annotation <- isotopes  
 
     actual <- purrr::pmap_dfr(
         annotation,
@@ -36,7 +45,6 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
             outlocorig = outloc
       )
     )
-
 
     actual$Formula <- gsub(actual$Formula, pattern = "_.*", replacement = "")
     keys <- colnames(actual)
@@ -76,9 +84,9 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
     gc(reset = TRUE)
 },
   patrick::cases(
-    #qc_solvent = list(test_identifier = "qc_solvent", max_diff_rt = 0.5)
-    # batch1_neg = list(test_identifier = "batch1_neg", max_diff_rt = 0.5)
-    # sourceforge = list(test_identifier = "sourceforge", max_diff_rt = 2)
+    qc_solvent = list(test_identifier = "qc_solvent", max_diff_rt = 0.5),
+    batch1_neg = list(test_identifier = "batch1_neg", max_diff_rt = 0.5),
+    sourceforge = list(test_identifier = "sourceforge", max_diff_rt = 2),
     qc_matrix = list(test_identifier = "qc_matrix", max_diff_rt = 0.5)
   )
 )
