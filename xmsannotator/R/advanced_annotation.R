@@ -1,3 +1,8 @@
+create_chemCompMZ <- function(database, adduct_names) {
+  database <- database[which(database$Adduct %in% adduct_names), ]
+  return(database)
+}
+
 #' @import dplyr
 #' @importFrom rlang .data
 compute_mass_defect <- function(peaks, precision) {
@@ -64,6 +69,17 @@ advanced_annotation <- function(peak_table,
                                 boosted_compounds = NULL,
                                 redundancy_filtering = TRUE,
                                 n_workers = parallel::detectCores()) {
+  
+  # TODO
+  # - these arguments are probably needed: 
+  #   db_name, filter.by, pathwaycheckmode (?), max_isp, min_ions_perchem
+  # - chemCompMZ needs to be created
+  database <- load_database(db_name)
+  chemCompMZ <- create_chemCompMZ(database, adduct_names)
+  # the adduct_names are constucted from adduct_table and queryadductlist (see multiannot. L139-150)
+  # - outloc is still needed in some functions
+  outloc = "."
+  
   if (is.null(adduct_table)) {
     adduct_table <- sample_adduct_table
   }
@@ -125,35 +141,44 @@ advanced_annotation <- function(peak_table,
     peak_table = peak_table,
     rt_tolerance = time_tolerance
   )
+  
+  annotation <- purrr::pmap_dfr(
+    annotation,
+    ~ get_chemscore(...,
+                    annotation = annotation,
+                    adduct_weights = adduct_weights,
+                    correlation_threshold = 0.7,
+                    peak_correlation_matrix = peak_correlation_matrix,
+                    time_tolerance = time_tolerance,
+                    outlocorig = outloc
+    )
+  )
 
-  annotation <- compute_scores(
-    annotation = annotation,
+  annotation <- multilevelannotationstep3(
+    chemCompMZ = chemCompMZ,
+    chemscoremat = annotation,
     adduct_weights = adduct_weights,
+    db_name = db_name,
+    max_diff_rt = time_tolerance,
+    pathwaycheckmode = "pm"
   )
-
-  annotation <- compute_pathways(
-    annotation = annotation,
-    pathway_mapping = pathway_mapping,
-    exluded_pathways = exluded_pathways,
-    exluded_pathway_compounds = exluded_pathway_compounds,
+  
+  annotation <- multilevelannotationstep4(
+    outloc = outloc,
+    chemscoremat = annotation,
+    max.mz.diff = mass_tolerance,
+    max.rt.diff = time_tolerance,
+    filter.by = filter.by,
     adduct_weights = adduct_weights,
-    score_threshold = 0.1
+    max_isp = max_isp,
+    min_ions_perchem = min_ions_perchem
   )
-
-  annotation <- compute_confidence_levels(
-    annotation = annotation,
-    expected_adducts = expected_adducts,
-    boosted_compounds = boosted_compounds,
-    mass_tolerance = mass_tolerance,
-    time_tolerance = time_tolerance
+  
+  annotation <- multilevelannotationstep5(
+    outloc = outloc,
+    adduct_weights = adduct_weights,
+    chemscoremat = annotation
   )
-
-  print_confidence_distribution(annotation)
-
-  if (redundancy_filtering) {
-    annotation <- remove_duplicates(annotation, adduct_weights)
-    print_confidence_distribution(annotation)
-  }
 
   annotation
 }
