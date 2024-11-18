@@ -114,15 +114,18 @@ advanced_annotation <- function(peak_table,
     adduct_table = adduct_table,
     mass_tolerance = mass_tolerance
   )
+
+  # this filter is already done in simple_annotation - maybe it can be removed here?
   annotation <- filter(annotation, forms_valid_adduct_pair(.data$molecular_formula, .data$adduct))
-  
+  # ---------------------------
+ 
   # Tool 2: Compute mass defect
   # ----------------------------
   annotation <- compute_mass_defect(annotation, precision = mass_defect_precision)
   # ----------------------------
 
 
-  # Tool 3: Compute correlations
+  # Tool 3: Compute correlations (peak intensity matrix will be the input, so doesn't need to be cut)
   # ----------------------------
   peak_intensity_matrix <- get_peak_intensity_matrix(peak_table)
   peak_correlation_matrix <- compute_peak_correlations(peak_intensity_matrix, correlation_method = "p")
@@ -199,7 +202,7 @@ advanced_annotation <- function(peak_table,
   # ----------------------------
 
 
-  # Tool 9: database matching
+  # Tool 9: pathway matching
   # ----------------------------
   data(hmdbCompMZ)
   chemCompMZ <- dplyr::rename(hmdbCompMZ, chemical_ID = HMDBID)
@@ -214,7 +217,7 @@ advanced_annotation <- function(peak_table,
   )
   # ----------------------------
 
-  # Tool 10: ???
+  # Tool 10: compute confidence levels
   # ----------------------------
   annotation <- multilevelannotationstep4(
     outloc = outloc,
