@@ -106,16 +106,30 @@ advanced_annotation <- function(peak_table,
   adduct_table <- as_adduct_table(adduct_table)
   compound_table <- as_compound_table(compound_table)
 
-  peak_intensity_matrix <- get_peak_intensity_matrix(peak_table)
-  peak_correlation_matrix <- compute_peak_correlations(peak_intensity_matrix, correlation_method = "p")
-
+  # Tool 1: Simple annotation
+  # ---------------------------
   annotation <- simple_annotation(
     peak_table = peak_table,
     compound_table = compound_table,
     adduct_table = adduct_table,
     mass_tolerance = mass_tolerance
   )
+  annotation <- filter(annotation, forms_valid_adduct_pair(.data$molecular_formula, .data$adduct))
+  
+  # Tool 2: Compute mass defect
+  # ----------------------------
+  annotation <- compute_mass_defect(annotation, precision = mass_defect_precision)
+  # ----------------------------
 
+
+  # Tool 3: Compute correlations
+  # ----------------------------
+  peak_intensity_matrix <- get_peak_intensity_matrix(peak_table)
+  peak_correlation_matrix <- compute_peak_correlations(peak_intensity_matrix, correlation_method = "p")
+  # ----------------------------
+
+  # Tool 4: Compute peak modules
+  # ----------------------------
   peak_modules <- compute_peak_modules(
     peak_intensity_matrix = peak_intensity_matrix,
     peak_correlation_matrix = peak_correlation_matrix,
@@ -124,24 +138,34 @@ advanced_annotation <- function(peak_table,
     min_cluster_size = min_cluster_size,
     network_type = network_type
   )
+  # ----------------------------
 
+  # Tool 5: Compute rt modules
+  # ----------------------------
   peak_rt_clusters <- compute_rt_modules(
     peak_table = inner_join(peak_table, peak_modules, by = "peak"),
     peak_width = peak_rt_width
   )
-
-  peak_table <- peak_table %>%
-    select(peak, mz, rt) %>%
-    inner_join(peak_rt_clusters, by = "peak") %>%
-    compute_mass_defect(precision = mass_defect_precision)
-
-  annotation <- filter(annotation, forms_valid_adduct_pair(.data$molecular_formula, .data$adduct))
-  annotation <- compute_mass_defect(annotation, precision = mass_defect_precision)
+  
+  # Step can be done in Galaxy using the cut and join tools
+  # ----------------------------
   annotation <- inner_join(annotation,
     select(peak_rt_clusters, "peak", "mean_intensity", "module", "rt_cluster"),
     by = "peak"
   )
+  # ----------------------------
 
+  # Re-use the mass defect tool on the output of compute rt modules
+  # ----------------------------
+  peak_table <- peak_table %>%
+    select(peak, mz, rt) %>%
+    inner_join(peak_rt_clusters, by = "peak") %>%
+    compute_mass_defect(precision = mass_defect_precision)
+  # ----------------------------
+
+
+  # Tool 6: Compute isotopes
+  # ----------------------------
   annotation <- compute_isotopes(
     annotation = annotation,
     adduct_weights = adduct_weights,
@@ -150,10 +174,16 @@ advanced_annotation <- function(peak_table,
     peak_table = peak_table,
     rt_tolerance = time_tolerance
   )
+  # ----------------------------
 
+  # Tool 7: Reformat annotation and correlation matrix for old xmsannotator
+  # ----------------------------
   annotation <- reformat_annotation_table(annotation)
   global_cor <- reformat_correlation_matrix(peak_table, peak_correlation_matrix)
+  # ----------------------------
 
+  # Tool 8: Compute chemscores
+  # ----------------------------
   annotation <- purrr::pmap_dfr(
     annotation,
     ~ get_chemscore(...,
@@ -166,7 +196,11 @@ advanced_annotation <- function(peak_table,
                     outlocorig = outloc
     )
   )
+  # ----------------------------
 
+
+  # Tool 9: database matching
+  # ----------------------------
   data(hmdbCompMZ)
   chemCompMZ <- dplyr::rename(hmdbCompMZ, chemical_ID = HMDBID)
 
@@ -178,7 +212,10 @@ advanced_annotation <- function(peak_table,
     max_diff_rt = time_tolerance,
     pathwaycheckmode = "pm"
   )
+  # ----------------------------
 
+  # Tool 10: ???
+  # ----------------------------
   annotation <- multilevelannotationstep4(
     outloc = outloc,
     chemscoremat = annotation,
@@ -189,16 +226,27 @@ advanced_annotation <- function(peak_table,
     max_isp = maximum_isotopes,
     min_ions_perchem = min_ions_per_chemical
   )
+  # ----------------------------
 
+  # Tool 11: print confidence distribution
+  # ----------------------------
   print_confidence_distribution(annotation)
+  # ----------------------------
 
   if (redundancy_filtering) {
+    # Tool 12: redundancy filtering
+    # ----------------------------
     annotation <- multilevelannotationstep5(
       outloc = outloc,
       adduct_weights = adduct_weights,
       chemscoremat = annotation
     )
+    # ----------------------------
+    
+    # Re-use the confidence distrivution printing tool
+    # ----------------------------
     print_confidence_distribution(annotation)
+    # ----------------------------
   }
 
   annotation
