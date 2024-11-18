@@ -126,6 +126,7 @@ advanced_annotation <- function(peak_table,
 
 
   # Tool 3: Compute correlations (peak intensity matrix will be the input, so doesn't need to be cut)
+  # also check the galaxy tool to compute correlations
   # ----------------------------
   peak_intensity_matrix <- get_peak_intensity_matrix(peak_table)
   peak_correlation_matrix <- compute_peak_correlations(peak_intensity_matrix, correlation_method = "p")
