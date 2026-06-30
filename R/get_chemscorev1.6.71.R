@@ -306,7 +306,6 @@ calc_base_score <- function(cur_adducts_with_isotopes, adduct_weights, topquant_
 }
 
 calc_base_score_v2 <- function(cur_adducts_with_isotopes, adduct_weights, topquant_cor) {
-  browser()
   cur_adducts <- gsub(cur_adducts_with_isotopes, pattern = "(_\\[(\\+|\\-)[0-9]*\\])", replacement = "")
 
   good_adducts_len <- length(which(cur_adducts_with_isotopes %in% adduct_weights[, 1]))
@@ -672,6 +671,14 @@ get_data_and_score_for_chemical <- function(cor_mz,
   return(list("score" = chemical_score, "data" = mchemicaldata))
 }
 
+#' Extract correlation submatrix for given peak identifiers
+#'
+#' @param mzid_cur Character vector of peak identifiers (format: "mz_time")
+#' @param global_cor Full correlation matrix with row/col names matching mzid format
+#'
+#' @return Correlation submatrix for the specified peaks. Note: If only one
+#' peak is provided, returns a 1x1 matrix with value 1.0 (self-correlation).
+#' For multiple peaks, returns the full pairwise correlation submatrix.
 compute_cor_mz <- function(mzid_cur, global_cor) {
   cor_mz <- round(global_cor[mzid_cur, mzid_cur], 1)
 

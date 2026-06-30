@@ -34,7 +34,7 @@ compute_confidence_levels <- function(c,
             Confidence <- as.numeric(as.character(curdata[, 1]))
             if (Confidence[1] < 2) {
                 if (length(which(curdata$Adduct %in% adduct_weights[which(as.numeric(adduct_weights[, 2]) > 0), 1])) > 0) {
-                    if (curdata$score[1] > 10) {
+                    if (curdata$score[1] >= 10) {
                         mnum <- max(as.numeric(as.character(adduct_weights[which(adduct_weights[, 1] %in% curdata$Adduct), 2])))[1]
                         curdata <- curdata[which(curdata$Adduct %in% adduct_weights[which(as.numeric(as.character(adduct_weights[, 2])) >= mnum), 1]), ]
                         Confidence <- 2
