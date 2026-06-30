@@ -1,67 +1,26 @@
 #!/bin/bash
 #
-# Download test data files from GitLab
-# https://gitlab.ics.muni.cz/umsa/umsa-files/-/tree/master/testdata/recetox-xMSannotator
+# Download test data files from remote URLs defined in tests/remote-files/
+# Each fetch_<folder>.txt file contains a list of URLs to download
 #
 # Usage:
-#   ./download_test_data.sh              # Download all files (requires GITLAB_TOKEN for private repo)
-#   ./download_test_data --skip-auth     # Skip auth check and try public access
+#   ./download_test_data.sh              # Download all files from all fetch_*.txt files
+#   ./download_test_data <folder>        # Download files for a specific folder (e.g., sourceforge)
 #   ./download_test_data --dry-run       # Show what would be downloaded without downloading
+#   ./download_test_data --list          # List all available folders and their files
 #
-# Environment variables:
-#   GITLAB_TOKEN - Personal access token for GitLab (required if repo is private)
-#   GITLAB_PROJECT_ID - Project ID (default: auto-detected)
+# Files are downloaded to: tests/test-data/<folder>/
 #
 
 set -e
 
 # Configuration
-GITLAB_BASE="https://gitlab.ics.muni.cz"
-PROJECT_PATH="umsa/umsa-files"
-BRANCH="master"
-BASE_DIR="testdata/recetox-xMSannotator"
-TEST_DATA_DIR="$(dirname "$0")/testthat/test-data"
-
-# Files to download organized by directory
-declare -A FILES=(
-    # sourceforge directory
-    ["sourceforge/tempobjects.Rda"]="sourceforge/tempobjects.Rda"
-    ["sourceforge/global_cor_integ.Rda"]="sourceforge/global_cor_integ.Rda"
-    ["sourceforge/chemscoremat.Rds"]="sourceforge/chemscoremat.Rds"
-    # qc_solvent directory
-    ["qc_solvent/tempobjects.Rda"]="qc_solvent/tempobjects.Rda"
-    ["qc_solvent/global_cor_integ.Rda"]="qc_solvent/global_cor_integ.Rda"
-    ["qc_solvent/chemscoremat.Rds"]="qc_solvent/chemscoremat.Rds"
-    # qc_matrix directory
-    ["qc_matrix/tempobjects.Rda"]="qc_matrix/tempobjects.Rda"
-    ["qc_matrix/global_cor_integ.Rda"]="qc_matrix/global_cor_integ.Rda"
-    ["qc_matrix/chemscoremat.Rds"]="qc_matrix/chemscoremat.Rds"
-    # batch1_neg directory
-    ["batch1_neg/global_cor_integ.Rda"]="batch1_neg/global_cor_integ.Rda"
-    ["batch1_neg/chemscoremat.Rds"]="batch1_neg/chemscoremat.Rds"
-)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REMOTE_FILES_DIR="${SCRIPT_DIR}/remote-files"
+TEST_DATA_DIR="${SCRIPT_DIR}/test-data"
 
 DRY_RUN=false
-SKIP_AUTH_CHECK=false
-
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        --skip-auth)
-            SKIP_AUTH_CHECK=true
-            shift
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Usage: $0 [--dry-run] [--skip-auth]"
-            exit 1
-            ;;
-    esac
-done
+SPECIFIC_FOLDER=""
 
 # Function to print status messages
 log_info() {
@@ -80,90 +39,111 @@ log_error() {
     echo "[ERROR] $1"
 }
 
-# Check if GitLab token is available
-check_auth() {
-    if [[ -n "$GITLAB_TOKEN" ]]; then
-        log_info "GitLab token found, will use authenticated requests"
-        return 0
-    else
-        log_warning "No GitLab token found. Set GITLAB_TOKEN environment variable for authenticated access."
-        log_info "Example: export GITLAB_TOKEN=glpat-xxxxxxxxxxxxx"
-        return 1
-    fi
+# Show usage
+show_usage() {
+    echo "Usage: $0 [OPTIONS] [FOLDER]"
+    echo ""
+    echo "Options:"
+    echo "  --dry-run    Show what would be downloaded without downloading"
+    echo "  --list       List all available folders and their files"
+    echo "  --help       Show this help message"
+    echo ""
+    echo "Arguments:"
+    echo "  FOLDER       Specific folder to download (e.g., sourceforge, qc_solvent)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                      # Download all files from all folders"
+    echo "  $0 sourceforge          # Download only sourceforge files"
+    echo "  $0 --dry-run            # Preview downloads"
+    echo "  $0 --list               # List available folders"
 }
 
-# Create directory structure
-create_directories() {
-    log_info "Creating directory structure..."
-    for dir in sourceforge qc_solvent qc_matrix batch1_neg; do
-        local full_path="$TEST_DATA_DIR/$dir"
-        if [[ ! -d "$full_path" ]]; then
-            if [[ "$DRY_RUN" == true ]]; then
-                log_info "[DRY-RUN] Would create: $full_path"
-            else
-                mkdir -p "$full_path"
-                log_info "Created: $full_path"
-            fi
-        else
-            log_info "Directory exists: $full_path"
+# List all available folders
+list_folders() {
+    log_info "Available folders:"
+    echo ""
+    for fetch_file in "${REMOTE_FILES_DIR}"/fetch_*.txt; do
+        if [[ -f "$fetch_file" ]]; then
+            folder_name=$(basename "$fetch_file" | sed 's/fetch_//' | sed 's/\.txt//')
+            file_count=$(grep -c "^http" "$fetch_file" 2>/dev/null || echo "0")
+            echo "  - ${folder_name} (${file_count} files)"
         fi
     done
+    echo ""
 }
 
-# Download a single file
-download_file() {
-    local relative_path=$1
-    local local_path="$TEST_DATA_DIR/$relative_path"
-    local file_dir=$(dirname "$local_path")
-    local file_name=$(basename "$relative_path")
-
-    # Build the URL - try both raw and API endpoints
-    local raw_url="$GITLAB_BASE/$PROJECT_PATH/-/raw/$BRANCH/$BASE_DIR/$relative_path"
-    local api_url="$GITLAB_BASE/api/v4/projects/$PROJECT_PATH/repository/files/$BASE_DIR%2F$relative_path/raw?ref=$BRANCH"
-
-    log_info "Downloading: $relative_path"
-
-    if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY-RUN] Would download from: $raw_url"
-        log_info "[DRY-RUN] Would save to: $local_path"
-        return 0
-    fi
-
-    # Ensure directory exists
-    mkdir -p "$file_dir"
-
-    # Download with optional authentication
-    if [[ -n "$GITLAB_TOKEN" ]]; then
-        curl -sL \
-            -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-            "$raw_url" \
-            -o "$local_path.tmp"
-    else
-        curl -sL "$raw_url" -o "$local_path.tmp"
-    fi
-
-    # Check if download was successful
-    if [[ -f "$local_path.tmp" ]] && [[ -s "$local_path.tmp" ]]; then
-        mv "$local_path.tmp" "$local_path"
-        local size=$(du -h "$local_path" | cut -f1)
-        log_success "Downloaded: $file_name ($size)"
-        return 0
-    else
-        rm -f "$local_path.tmp"
-        log_error "Failed to download: $relative_path"
-        return 1
-    fi
+# Get folder name from fetch file
+get_folder_name() {
+    local fetch_file="$1"
+    basename "$fetch_file" | sed 's/fetch_//' | sed 's/\.txt//'
 }
 
-# List all files that would be downloaded
-list_files() {
-    log_info "Files to download:"
+# Download files from a single fetch file
+download_folder() {
+    local fetch_file="$1"
+    local folder_name=$(get_folder_name "$fetch_file")
+    local target_dir="${TEST_DATA_DIR}/${folder_name}"
+
+    log_info "Processing: ${folder_name}"
+
+    # Create target directory
+    if [[ ! -d "$target_dir" ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY-RUN] Would create: ${target_dir}"
+        else
+            mkdir -p "$target_dir"
+            log_info "Created directory: ${target_dir}"
+        fi
+    fi
+
+    # Read URLs from fetch file and download
+    local success_count=0
+    local fail_count=0
+    local line_num=0
+
+    while IFS= read -r url || [[ -n "$url" ]]; do
+        line_num=$((line_num + 1))
+
+        # Skip empty lines and comments
+        [[ -z "$url" ]] && continue
+        [[ "$url" =~ ^[[:space:]]*# ]] && continue
+
+        # Extract filename from URL
+        local filename=$(basename "$url")
+        local target_file="${target_dir}/${filename}"
+
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY-RUN] Would download: ${filename}"
+            success_count=$((success_count + 1))
+            continue
+        fi
+
+        log_info "  Downloading: ${filename}"
+
+        # Download the file
+        if curl -sL "$url" -o "${target_file}.tmp"; then
+            # Check if download was successful (file has content)
+            if [[ -s "${target_file}.tmp" ]]; then
+                mv "${target_file}.tmp" "$target_file"
+                local size=$(du -h "$target_file" | cut -f1)
+                log_success "    Saved: ${filename} (${size})"
+                success_count=$((success_count + 1))
+            else
+                rm -f "${target_file}.tmp"
+                log_error "    Failed: ${filename} (empty download)"
+                fail_count=$((fail_count + 1))
+            fi
+        else
+            rm -f "${target_file}.tmp"
+            log_error "    Failed: ${filename} (download error)"
+            fail_count=$((fail_count + 1))
+        fi
+    done < "$fetch_file"
+
+    log_info "  Completed: ${success_count} succeeded, ${fail_count} failed"
     echo ""
-    for key in "${!FILES[@]}"; do
-        echo "  - $key"
-    done | sort
-    echo ""
-    echo "Total: ${#FILES[@]} files"
+
+    return $fail_count
 }
 
 # Main execution
@@ -173,55 +153,90 @@ main() {
     echo "=========================================="
     echo ""
 
-    # Show what we're doing
-    list_files
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --list)
+                list_folders
+                exit 0
+                ;;
+            --help|-h)
+                show_usage
+                exit 0
+                ;;
+            *)
+                SPECIFIC_FOLDER="$1"
+                shift
+                ;;
+        esac
+    done
 
+    # Check if remote-files directory exists
+    if [[ ! -d "$REMOTE_FILES_DIR" ]]; then
+        log_error "Remote files directory not found: ${REMOTE_FILES_DIR}"
+        exit 1
+    fi
+
+    # Show dry-run mode
     if [[ "$DRY_RUN" == true ]]; then
         log_info "Running in dry-run mode - no files will be downloaded"
+        echo ""
     fi
 
-    # Check authentication
-    if [[ "$SKIP_AUTH_CHECK" != true ]]; then
-        check_auth || {
-            log_warning "Continuing without authentication - may fail for private repositories"
-        }
-    fi
+    # Determine which folders to process
+    local folders_to_process=()
 
-    # Create directories
-    create_directories
-
-    # Download files
-    local failed=0
-    local success=0
-
-    echo ""
-    log_info "Starting downloads..."
-    echo ""
-
-    for key in "${!FILES[@]}"; do
-        if download_file "$key"; then
-            ((++success))
-        else
-            ((++failed))
+    if [[ -n "$SPECIFIC_FOLDER" ]]; then
+        # Process specific folder
+        local fetch_file="${REMOTE_FILES_DIR}/fetch_${SPECIFIC_FOLDER}.txt"
+        if [[ ! -f "$fetch_file" ]]; then
+            log_error "Fetch file not found: ${fetch_file}"
+            log_info "Available folders:"
+            list_folders
+            exit 1
         fi
+        folders_to_process+=("$fetch_file")
+    else
+        # Process all folders
+        for fetch_file in "${REMOTE_FILES_DIR}"/fetch_*.txt; do
+            if [[ -f "$fetch_file" ]]; then
+                folders_to_process+=("$fetch_file")
+            fi
+        done
+    fi
+
+    if [[ ${#folders_to_process[@]} -eq 0 ]]; then
+        log_error "No fetch files found to process"
+        exit 1
+    fi
+
+    # Process each folder
+    local total_success=0
+    local total_fail=0
+
+    for fetch_file in "${folders_to_process[@]}"; do
+        download_folder "$fetch_file"
+        local result=$?
+        total_fail=$((total_fail + result))
     done
 
     # Summary
-    echo ""
     echo "=========================================="
     echo "Download Summary"
     echo "=========================================="
-    log_success "Successfully downloaded: $success files"
-    if [[ $failed -gt 0 ]]; then
-        log_error "Failed to download: $failed files"
-        log_info "If authentication is required, set GITLAB_TOKEN and try again:"
-        log_info "  export GITLAB_TOKEN=your-token-here"
-        log_info "  ./download_test_data.sh"
-        exit 1
-    else
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "Dry-run complete - no files were downloaded"
+    elif [[ $total_fail -eq 0 ]]; then
         log_success "All files downloaded successfully!"
+    else
+        log_error "Some downloads failed: ${total_fail}"
+        exit 1
     fi
 }
 
 # Run main function
-main
+main "$@"
