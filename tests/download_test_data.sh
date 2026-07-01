@@ -17,7 +17,7 @@ set -e
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REMOTE_FILES_DIR="${SCRIPT_DIR}/remote-files"
-TEST_DATA_DIR="${SCRIPT_DIR}/test-data"
+TEST_DATA_DIR="${SCRIPT_DIR}/testthat/test-data"
 
 DRY_RUN=false
 SPECIFIC_FOLDER=""
