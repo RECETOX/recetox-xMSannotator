@@ -19,6 +19,8 @@ construct_adduct_formula <- function(formula, mass_number_difference) {
 #' @importFrom rlang .data
 #' @export
 reformat_annotation_table <- function(annotation) {
+  has_name <- "name" %in% colnames(annotation)
+
   master_annotation <- tibble(.rows = nrow(annotation))
 
   master_annotation <- master_annotation %>%
@@ -33,7 +35,6 @@ reformat_annotation_table <- function(annotation) {
       ),
       theoretical.mz = annotation$expected_mass,
       chemical_ID = paste("Formula", annotation$compound, sep = "_"),
-      Name = annotation$name,
       Formula = annotation$molecular_formula,
       MonoisotopicMass = annotation$monoisotopic_mass,
       Adduct = if_else(annotation$mass_number_difference == 0, annotation$adduct, construct_adduct_formula(annotation$adduct, annotation$mass_number_difference)),
@@ -42,6 +43,11 @@ reformat_annotation_table <- function(annotation) {
       mean_int_vec = annotation$mean_intensity,
       MD = as.numeric(sprintf("0.%1.0f", annotation$mass_defect))
     )
+
+  # Conditionally add Name column if it exists in input
+  if (has_name) {
+    master_annotation$Name <- annotation$name
+  }
 
   return(master_annotation)
 }

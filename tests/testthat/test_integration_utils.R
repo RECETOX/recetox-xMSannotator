@@ -8,12 +8,8 @@ test_that("Integration utils: annotation table reformating", {
   actual <- dplyr::arrange(actual, dplyr::across(everything()))
   expected <- dplyr::arrange(expected, dplyr::across(everything()))
 
-  comparison <- dataCompareR::rCompare(
-    actual,
-    expected,
-    keys = names(actual)
-  )
-
+  # Note: dataCompareR::rCompare() removed due to deprecated select_() usage in dataCompareR
+  # The expect_equal below provides the same assertion
   expect_equal(actual, expected)
 })
 

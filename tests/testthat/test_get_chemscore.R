@@ -63,14 +63,14 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
       expected, keys
     )
 
-    comparison <- dataCompareR::rCompare(actual, expected, keys = keys)
-    dataCompareR::saveReport(
-      comparison,
-      reportName = test_identifier,
-      reportLocation = outloc,
-      showInViewer = FALSE,
-      mismatchCount = 10000
-    )
+    # comparison <- dataCompareR::rCompare(actual, expected, keys = keys)
+    # dataCompareR::saveReport(
+    #   comparison,
+    #   reportName = test_identifier,
+    #   reportLocation = outloc,
+    #   showInViewer = FALSE,
+    #   mismatchCount = 10000
+    # )
 
     write.csv(actual, file = file.path(outloc, "chemscoremat_actual.csv"))
     write.csv(expected, file = file.path(outloc, "chemscoremat_expected.csv"))
