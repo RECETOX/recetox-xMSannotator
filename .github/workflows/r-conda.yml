@@ -47,4 +47,4 @@ jobs:
       - name: Test coverage
         run: |
           conda activate recetox-xmsannotator-dev
-          Rscript -e "options(covr.gcov=''); covr::codecov(quiet = FALSE)"
+          Rscript -e "devtools::test()"
