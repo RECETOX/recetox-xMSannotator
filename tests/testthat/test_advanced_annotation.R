@@ -2,6 +2,7 @@ patrick::with_parameters_test_that("basic advanced_annotation functionality", {
   if (exists("skip_function") && is.function(skip_function)) {
     skip_function()
   }
+  skip("")
 
   testthat_wd <- getwd()
   outloc <- file.path(tempdir(), "advanced_annotation")

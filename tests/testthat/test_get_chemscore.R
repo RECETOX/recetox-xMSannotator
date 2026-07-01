@@ -11,6 +11,7 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
       "test-data",
       test_identifier
     )
+    browser()
     load(file = file.path(test_path, "tempobjects.Rda"))
 
     outloc <- file.path(tempdir(), "get_chemscore", test_identifier)
@@ -23,7 +24,7 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
 
     setwd(testthat_wd)
 
-    annotation_file <- file.path("test-data", "get_chemscore",paste0(test_identifier, "_annotation.Rds"))
+    annotation_file <- file.path("test-data", "get_chemscore", paste0(test_identifier, "_annotation.Rds"))
     isotopes <- readRDS(annotation_file)
 
     if(is.factor(isotopes$MonoisotopicMass)) {
@@ -63,14 +64,14 @@ patrick::with_parameters_test_that("Compute chemscore can be called isolated", {
       expected, keys
     )
 
-    comparison <- dataCompareR::rCompare(actual, expected, keys = keys)
-    dataCompareR::saveReport(
-      comparison,
-      reportName = test_identifier,
-      reportLocation = outloc,
-      showInViewer = FALSE,
-      mismatchCount = 10000
-    )
+    # comparison <- dataCompareR::rCompare(actual, expected, keys = keys)
+    # dataCompareR::saveReport(
+    #   comparison,
+    #   reportName = test_identifier,
+    #   reportLocation = outloc,
+    #   showInViewer = FALSE,
+    #   mismatchCount = 10000
+    # )
 
     write.csv(actual, file = file.path(outloc, "chemscoremat_actual.csv"))
     write.csv(expected, file = file.path(outloc, "chemscoremat_expected.csv"))

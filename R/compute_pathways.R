@@ -18,10 +18,10 @@ optional_exclude <- function(data, exclude, column_name) {
 }
 
 
-#' Remove pathways which are statisticaly independent on significant annotations
+#' Remove pathways which are statistically independent on significant annotations
 #'
-#' Test whether compounds associated with some specific pathway are equaly
-#' likely to be marked as significant as compounds not assotiated with the
+#' Test whether compounds associated with some specific pathway are equally
+#' likely to be marked as significant as compounds not associated with the
 #' pathway. If \empth{x} is a compound, \emph{P} is some specific pathway and
 #' \emph{S} is a group of significant annotations then the data can be
 #' represented by the following contingency table:
@@ -34,7 +34,7 @@ optional_exclude <- function(data, exclude, column_name) {
 #' @param pathways data frame of pathway-compound mappings
 #' @param significant vector of significant compounds
 #'
-#' @return currated data frame of pathway-compounds mappings
+#' @return curated data frame of pathway-compounds mappings
 remove_indipendent_pathways <- function (pathways, significant) {
   n_all_significant_compounds <- n_distinct(significant)
   n_all_compounds_in_pathways <- n_distinct(pathways$compound)
@@ -61,7 +61,7 @@ remove_indipendent_pathways <- function (pathways, significant) {
 #'
 #' For each annotated compound computes a set (ie. more then one) of most
 #' abundant (dominant) modules. The abundance of modules is computed from
-#' distinct adduct-compound-peak tripplets.
+#' distinct adduct-compound-peak triplets.
 #'
 #' @param annotations data frame with annotations
 #'

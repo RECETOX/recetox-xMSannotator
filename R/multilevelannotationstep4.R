@@ -34,7 +34,7 @@ compute_confidence_levels <- function(c,
             Confidence <- as.numeric(as.character(curdata[, 1]))
             if (Confidence[1] < 2) {
                 if (length(which(curdata$Adduct %in% adduct_weights[which(as.numeric(adduct_weights[, 2]) > 0), 1])) > 0) {
-                    if (curdata$score[1] > 10) {
+                    if (curdata$score[1] >= 10) {
                         mnum <- max(as.numeric(as.character(adduct_weights[which(adduct_weights[, 1] %in% curdata$Adduct), 2])))[1]
                         curdata <- curdata[which(curdata$Adduct %in% adduct_weights[which(as.numeric(as.character(adduct_weights[, 2])) >= mnum), 1]), ]
                         Confidence <- 2
@@ -70,20 +70,25 @@ compute_confidence_levels <- function(c,
 }
 
 compute_delta_ppm <- function(chemscoremat_with_confidence) {
-    # this is fishy but necessary 
-    chemscoremat_with_confidence$mz <- as.numeric(as.character(chemscoremat_with_confidence$mz))
-    chemscoremat_with_confidence$theoretical.mz <- as.numeric(as.character(chemscoremat_with_confidence$theoretical.mz))
-    
+    # Convert "-" placeholders to NA before numeric conversion
+    mz_vals <- as.character(chemscoremat_with_confidence$mz)
+    mz_vals[mz_vals == "-"] <- NA
+    chemscoremat_with_confidence$mz <- as.numeric(mz_vals)
+
+    theo_mz_vals <- as.character(chemscoremat_with_confidence$theoretical.mz)
+    theo_mz_vals[theo_mz_vals == "-"] <- NA
+    chemscoremat_with_confidence$theoretical.mz <- as.numeric(theo_mz_vals)
+
     chemscoremat_with_confidence_temp <- chemscoremat_with_confidence[, c("mz", "theoretical.mz")]
     chemscoremat_with_confidence_temp <- apply(chemscoremat_with_confidence_temp, 1, as.numeric)
     chemscoremat_with_confidence_temp <- t(chemscoremat_with_confidence_temp)
     chemscoremat_with_confidence_temp <- as.data.frame(chemscoremat_with_confidence_temp)
-    
+
     delta_ppm <- apply(chemscoremat_with_confidence_temp, 1, function(x) {
         return(10^6 * abs(x[2] - x[1]) / (x[2]))
     })
     delta_ppm <- round(delta_ppm, 2)
-    
+
     chemscoremat_with_confidence <- cbind(chemscoremat_with_confidence[, 1:8], delta_ppm, chemscoremat_with_confidence[, 9:dim(chemscoremat_with_confidence)[2]])
     chemscoremat_with_confidence <- chemscoremat_with_confidence[order(chemscoremat_with_confidence$Confidence, decreasing = TRUE), ]
     return(chemscoremat_with_confidence)

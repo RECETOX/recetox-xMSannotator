@@ -1,6 +1,6 @@
 # Documentation
 
-This folder contains the projects documentation as well as best-practices regarding [refactoring](refactoring.md), [testing](testing.md) or [data transformation](data_transformation.md), as well as explanations regarding test data.
+This folder contains the projects documentation as well as best practices regarding [refactoring](refactoring.md), [testing](testing.md) or [data transformation](data_transformation.md), as well as explanations regarding test data.
 
 The [developer documentation](developer_documentation.md) contains all info for developers who wish to contribute and work on the project - please also read the best practices documents!
 

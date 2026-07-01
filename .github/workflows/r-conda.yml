@@ -28,10 +28,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Create conda environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: recetox-xmsannotator-dev
           auto-update-conda: true
@@ -40,15 +40,11 @@ jobs:
       - run: |
           conda init bash
           conda env list
-      - name: Fetch batch1_neg test data
-        run: wget -P tests/testthat/test-data/batch1_neg -i tests/remote-files/fetch_batch1_neg.txt
-      - name: Fetch qc_solvent test data
-        run: wget -P tests/testthat/test-data/qc_solvent -i tests/remote-files/fetch_qc_solvent.txt
-      - name: Fetch sourceforge test data
-        run: wget -P tests/testthat/test-data/sourceforge -i tests/remote-files/fetch_sourceforge.txt
-      - name: Fetch qc_matrix test data
-        run: wget -P tests/testthat/test-data/qc_matrix -i tests/remote-files/fetch_qc_matrix.txt
+      - name: Fetch Test Data
+        run: |
+          cd tests
+          ./download_test_data.sh
       - name: Test coverage
         run: |
           conda activate recetox-xmsannotator-dev
-          Rscript -e "options(covr.gcov=''); covr::codecov(quiet = FALSE)"
+          Rscript -e "devtools::test()"

@@ -48,21 +48,11 @@ patrick::with_parameters_test_that(
 
     keys <- c("mz", "time", "Name", "Adduct", "Formula", "chemical_ID", "cur_chem_score", "MatchCategory")
 
-    actual <- dplyr::arrange_at(
-      actual, keys
-    )
-    expected <- dplyr::arrange_at(
-      expected, keys
-    )
+    actual <- dplyr::arrange(actual, dplyr::across(all_of(keys)))
+    expected <- dplyr::arrange(expected, dplyr::across(all_of(keys)))
 
-    comparison <- dataCompareR::rCompare(actual, expected, keys = keys)
-    dataCompareR::saveReport(
-      comparison,
-      reportName = test_identifier,
-      reportLocation = outloc,
-      showInViewer = FALSE,
-      mismatchCount = 1000
-    )
+    # Note: dataCompareR::rCompare() removed due to deprecated select_() usage in dataCompareR
+    # The expect_equal below provides the same assertion
 
     # Annihilate
     setwd(outloc)

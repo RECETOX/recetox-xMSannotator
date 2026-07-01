@@ -40,22 +40,11 @@ patrick::with_parameters_test_that(
 
     setwd(testthat_wd)
 
-    actual <- dplyr::arrange_all(actual)
-    expected <- dplyr::arrange_all(expected)
+    actual <- dplyr::arrange(actual, dplyr::across(everything()))
+    expected <- dplyr::arrange(expected, dplyr::across(everything()))
 
-    comparison <- dataCompareR::rCompare(
-      actual,
-      expected,
-      keys = names(actual)
-    )
-
-    dataCompareR::saveReport(
-      comparison,
-      reportName = subfolder,
-      reportLocation = outloc,
-      showInViewer = FALSE,
-      mismatchCount = 1000
-    )
+    # Note: dataCompareR::rCompare() removed due to deprecated select_() usage in dataCompareR
+    # The expect_equal below provides the same assertion
 
     expect_equal(actual, expected)
   },

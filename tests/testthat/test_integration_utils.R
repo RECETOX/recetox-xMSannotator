@@ -4,15 +4,12 @@ test_that("Integration utils: annotation table reformating", {
   actual <- reformat_annotation_table(main_annotation_table)
   expected <- readRDS("test-data/integration_utils/master_annotation_table.rds")
 
-  actual <- dplyr::arrange_all(actual)
-  expected <- dplyr::arrange_all(expected)
+  # Use across() instead of deprecated arrange_all()
+  actual <- dplyr::arrange(actual, dplyr::across(everything()))
+  expected <- dplyr::arrange(expected, dplyr::across(everything()))
 
-  comparison <- dataCompareR::rCompare(
-    actual,
-    expected,
-    keys = names(actual)
-  )
-
+  # Note: dataCompareR::rCompare() removed due to deprecated select_() usage in dataCompareR
+  # The expect_equal below provides the same assertion
   expect_equal(actual, expected)
 })
 

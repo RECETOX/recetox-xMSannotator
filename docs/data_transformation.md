@@ -29,7 +29,7 @@ The recetox-aplcms tool outputs the peak table in a format which is not directly
 #'
 #' @export
 load_parquet <- function(file) {
-    message <- paste("The file", toString(file), "seams not to be a valid Parquet file.")
+    message <- paste("The file", toString(file), "seems not to be a valid Parquet file.")
     rlang::with_handlers(
         arrow::read_parquet(file),
         error = ~ rlang::abort(message, parent = .)
